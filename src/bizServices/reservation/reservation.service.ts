@@ -1,6 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import AddReservationDto from "src/app/reservation/dto/addReservation.dto";
 import DeleteReservationDto from "src/app/reservation/dto/deleteReservation.dto";
+import GetAvailableSlotsDto from "src/app/reservation/dto/getAvailableSlots.dto";
 import GetReservationByResIdTableDto from "src/app/reservation/dto/getReservationByResIdTable.dto";
 import GetReservationsDto from "src/app/reservation/dto/getReservations.dto";
 import UpdateReservationDto from "src/app/reservation/dto/updateReservation.dto";
@@ -67,6 +68,17 @@ export default class ReservationBizService {
   ): Promise<any> {
     try {
       return await this.reservationPDB.getReservation(getReservationParams);
+    } catch (err) {
+      throw new CustomInternalServerErrorExceptionApiG(apiCode, err).exception;
+    }
+  }
+
+  async getAvailableSlots(
+    getAvailableSlotsParams: GetAvailableSlotsDto,
+    apiCode
+  ): Promise<any> {
+    try {
+      return await this.reservationPDB.getAvailableSlots(getAvailableSlotsParams);
     } catch (err) {
       throw new CustomInternalServerErrorExceptionApiG(apiCode, err).exception;
     }

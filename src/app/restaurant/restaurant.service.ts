@@ -34,11 +34,11 @@ export default class RestaurantService {
         "Restaurant already exists"
       ).exception;
     }
-    const { data } = await this.restaurantBizService.addRestaurant(
+    const result = await this.restaurantBizService.addRestaurant(
       addRestaurantParams,
       apiCode
     );
-    return new CommonResponse(null, 201, "Created", data, true);
+    return new CommonResponse(null, 201, "Created", result, true);
   }
 
   async getRestaurants(apiCode: string): Promise<any> {

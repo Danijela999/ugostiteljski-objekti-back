@@ -45,6 +45,8 @@ import UpdateReservationDto from "./dto/updateReservation.dto";
 import updateReservationSchema from "./schema/updateReservation.schema";
 import { JoiValidationPipeApiG } from "src/pipes/apiGee/joiValidation.apiGee.pipe";
 import getReservationsSchema from "./schema/getReservations.schema";
+import GetAvailableSlotsDto from "./dto/getAvailableSlots.dto";
+import getAvailableSlotsSchema from "./schema/getAvailableSlots.schema";
 
 const apiCode = httpApiGeeCodes["ReservationController"];
 @ApiTags("Reservation")
@@ -97,6 +99,31 @@ export default class ReservationController {
   ): Promise<any> {
     return await this.reservationService.getReservationsPerUser(
       getReservationsParams,
+      apiCode
+    );
+  }
+  /** getReservationsPerUser - END */
+
+  /** getAvailableSlots - START */
+  @Get("/slots")
+  @ApiBadRequestResponse(commonBadRequest({ apiCode }))
+  @ApiInternalServerErrorResponse(commonInternalServerError({ apiCode }))
+  @ApiUnauthorizedResponse(commonNotAuthorized({ apiCode }))
+  @ApiForbiddenResponse(commonForbidden({ apiCode }))
+  @ApiNotFoundResponse(commonNotFound({ apiCode, message: "Slots Not Found" }))
+  @ApiOkResponse(
+    commonOK({
+      description: "Successfully retreived available slots data",
+    })
+  )
+  @UseGuards(AuthGuardApiG)
+  @UsePipes(new JoiValidationPipeApiG(getAvailableSlotsSchema, apiCode))
+  async get(
+    @Query() getAvailableSlotsParams: GetAvailableSlotsDto,
+    @Res() _res: Response
+  ): Promise<any> {
+    return await this.reservationService.getAvailableSlots(
+      getAvailableSlotsParams,
       apiCode
     );
   }

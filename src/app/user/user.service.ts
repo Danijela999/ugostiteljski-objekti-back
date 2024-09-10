@@ -58,7 +58,7 @@ export default class UserService {
           email: user[0].email,
           firstName: user[0].first_name,
           lastName: user[0].last_name,
-          privilegeId: user[0].id_privilegije,
+          privilegeId: user[0].privilege_id,
           timeExpire,
         };
 
@@ -66,7 +66,7 @@ export default class UserService {
           email: user[0].email,
           firstName: user[0].first_name,
           lastName: user[0].last_name,
-          privilegeId: user[0].id_privilegije,
+          privilegeId: user[0].privilege_id,
           timeExpire: timeExpireRefresh,
         };
         const accessToken = this.jwtService.sign(payload, {

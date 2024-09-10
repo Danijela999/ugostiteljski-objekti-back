@@ -16,7 +16,7 @@ export default class UserDB {
     const { email, firstName, lastName, password } = createUserParams;
     const saltOrRounds = 10;
     const hash = await bcrypt.hash(password, saltOrRounds);
-    const sql = `INSERT INTO users (email, first_name, last_name, password, id_privilegije) VALUES ("${email}", "${firstName}", "${lastName}", "${hash}", 1);`;
+    const sql = `INSERT INTO users (email, first_name, last_name, password, privilege_id) VALUES ("${email}", "${firstName}", "${lastName}", "${hash}", 1);`;
     try {
       return await MySQLClient.runQuery(
         dbNamesEnum.DB,

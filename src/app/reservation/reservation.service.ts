@@ -9,6 +9,7 @@ import AddReservationDto from "./dto/addReservation.dto";
 import GetReservationsDto from "./dto/getReservations.dto";
 import DeleteReservationDto from "./dto/deleteReservation.dto";
 import UpdateReservationDto from "./dto/updateReservation.dto";
+import GetAvailableSlotsDto from "./dto/getAvailableSlots.dto";
 
 @Injectable()
 export default class ReservationService {
@@ -34,6 +35,17 @@ export default class ReservationService {
       apiCode
     );
     return new CommonResponse(null, 200, "OK", reservations);
+  }
+
+  async getAvailableSlots(
+    getAvailableSlotsParams: GetAvailableSlotsDto,
+    apiCode
+  ): Promise<any> {
+    const termins = await this.reservationBizService.getAvailableSlots(
+      getAvailableSlotsParams,
+      apiCode
+    );
+    return new CommonResponse(null, 200, "OK", termins);
   }
 
   async deleteReservation(

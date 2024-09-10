@@ -9,6 +9,10 @@ const addRestaurantSchema = Joi.object()
     longitude: Joi.number().required(),
     startTime: Joi.string().required(),
     endTime: Joi.string().required(),
+    imageUrl: Joi.string().required(),
+    email: Joi.string().required(),
+    categories: Joi.array().required(),
+    tableData: Joi.array().required()
   })
   .required();
 
