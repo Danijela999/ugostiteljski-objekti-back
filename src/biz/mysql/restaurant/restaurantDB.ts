@@ -24,8 +24,8 @@ export default class RestaurantDB {
       endTime,
       imageUrl,
       categories,
-      tableData, 
-      email
+      tableData,
+      email,
     } = addRestaurantParams;
 
     try {
@@ -35,12 +35,15 @@ export default class RestaurantDB {
         sql,
         this.mySqlConfig.config[dbNamesEnum.DB]
       );
-      const restaurantNew = await this.getRestaurantByNameAndAdress({name, address});
-      console.log(restaurantNew)
+      const restaurantNew = await this.getRestaurantByNameAndAdress({
+        name,
+        address,
+      });
+      console.log(restaurantNew);
       const { id } = restaurantNew[0];
       for (const category of categories) {
         if (category.checked) {
-          let sql2 = `INSERT INTO restaurant_categories (restaurant_id, category_id, duration) VALUES (${id}, ${category.id}, ${category.minutes})`
+          let sql2 = `INSERT INTO restaurant_categories (restaurant_id, category_id, duration) VALUES (${id}, ${category.id}, ${category.minutes})`;
           await MySQLClient.runQuery(
             dbNamesEnum.DB,
             sql2,
@@ -49,17 +52,29 @@ export default class RestaurantDB {
         }
       }
 
+      const uniquePositions = new Set();
+
       for (const table of tableData) {
         let positionId = table.position.id;
-        let sql2 = `INSERT INTO restaurant_positions (restaurant_id, position_id) VALUES (${id}, ${positionId})`
+        uniquePositions.add(positionId);
+      }
+
+      for (const positionId of uniquePositions) {
+        let sql2 = `INSERT INTO restaurant_positions (restaurant_id, position_id) VALUES (${id}, ${positionId})`;
+
         await MySQLClient.runQuery(
           dbNamesEnum.DB,
           sql2,
           this.mySqlConfig.config[dbNamesEnum.DB]
         );
+      }
+
+      for (const table of tableData) {
+        let positionId = table.position.id;
+
         let numOfTable = table.tables;
         for (let i = 0; i < numOfTable; i++) {
-          let sql3 = `INSERT INTO tables (restaurant_id, position_id, numberOfChairs) VALUES (${id}, ${positionId}, ${table.chairs})`
+          let sql3 = `INSERT INTO tables (restaurant_id, position_id, numberOfChairs) VALUES (${id}, ${positionId}, ${table.chairs})`;
           await MySQLClient.runQuery(
             dbNamesEnum.DB,
             sql3,

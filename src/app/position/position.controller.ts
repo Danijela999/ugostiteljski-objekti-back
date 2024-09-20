@@ -35,6 +35,9 @@ import {
   commonOK,
 } from "../../swagger/apiDocumentationCommonResponse";
 import PositionService from "./position.service";
+import { JoiValidationPipeApiG } from "src/pipes/apiGee/joiValidation.apiGee.pipe";
+import getPositionsByRestaurantSchema from "./schema/positionsByRestaurant.schema";
+import GetPositionsByRestaurantDto from "./dto/positionsByRestaurant.dto";
 
 const apiCode = httpApiGeeCodes["PositionController"];
 @ApiTags("Position")
@@ -49,10 +52,12 @@ export default class PositionController {
   @ApiInternalServerErrorResponse(commonInternalServerError({ apiCode }))
   @ApiUnauthorizedResponse(commonNotAuthorized({ apiCode }))
   @ApiForbiddenResponse(commonForbidden({ apiCode }))
-  @ApiNotFoundResponse(commonNotFound({ apiCode, message: "Menu Not Found" }))
+  @ApiNotFoundResponse(
+    commonNotFound({ apiCode, message: "Positions Not Found" })
+  )
   @ApiOkResponse(
     commonOK({
-      description: "Successfully retreived categories data",
+      description: "Successfully retreived positions data",
     })
   )
   @UseGuards(AuthGuardApiG)
@@ -60,4 +65,28 @@ export default class PositionController {
     return await this.positionService.getPositions(apiCode);
   }
   /** getPositions - END */
+
+  /** getPositionsByRestaurant - START */
+  @Get("/restaurant")
+  @ApiBadRequestResponse(commonBadRequest({ apiCode }))
+  @ApiInternalServerErrorResponse(commonInternalServerError({ apiCode }))
+  @ApiUnauthorizedResponse(commonNotAuthorized({ apiCode }))
+  @ApiForbiddenResponse(commonForbidden({ apiCode }))
+  @ApiNotFoundResponse(
+    commonNotFound({ apiCode, message: "Positions Not Found" })
+  )
+  @ApiOkResponse(
+    commonOK({
+      description: "Successfully retreived positions data",
+    })
+  )
+  @UseGuards(AuthGuardApiG)
+  @UsePipes(new JoiValidationPipeApiG(getPositionsByRestaurantSchema, apiCode))
+  async getPositionsByRestaurant(
+    @Query() params: GetPositionsByRestaurantDto,
+    @Res() _res: Response
+  ): Promise<any> {
+    return await this.positionService.getPositionsByRestaurant(params, apiCode);
+  }
+  /** getPositionsByRestaurant - END */
 }

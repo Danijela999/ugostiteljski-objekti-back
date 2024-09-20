@@ -2,7 +2,7 @@ import Joi = require("@hapi/joi");
 
 const getReservationsSchema = Joi.object()
   .keys({
-    userId: Joi.number().required(),
+    email: Joi.string().required(),
   })
   .required();
 

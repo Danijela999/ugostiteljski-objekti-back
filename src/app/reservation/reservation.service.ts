@@ -10,6 +10,7 @@ import GetReservationsDto from "./dto/getReservations.dto";
 import DeleteReservationDto from "./dto/deleteReservation.dto";
 import UpdateReservationDto from "./dto/updateReservation.dto";
 import GetAvailableSlotsDto from "./dto/getAvailableSlots.dto";
+import GetReservationsByRestaurantDto from "./dto/getReservationsByRestaurant.dto";
 
 @Injectable()
 export default class ReservationService {
@@ -17,7 +18,7 @@ export default class ReservationService {
 
   async addReservation(
     addReservationParams: AddReservationDto,
-    apiCode
+    apiCode: string
   ): Promise<any> {
     const { data } = await this.reservationBizService.addReservation(
       addReservationParams,
@@ -28,9 +29,31 @@ export default class ReservationService {
 
   async getReservationsPerUser(
     getReservationsParams: GetReservationsDto,
-    apiCode
+    apiCode: string
   ): Promise<any> {
     const reservations = await this.reservationBizService.getReservationsPerUser(
+      getReservationsParams,
+      apiCode
+    );
+    return new CommonResponse(null, 200, "OK", reservations);
+  }
+
+  async getActiveReservationsPerUser(
+    getReservationsParams: GetReservationsDto,
+    apiCode: string
+  ): Promise<any> {
+    const reservations = await this.reservationBizService.getActiveReservationsPerUser(
+      getReservationsParams,
+      apiCode
+    );
+    return new CommonResponse(null, 200, "OK", reservations);
+  }
+
+  async getActiveReservationsPerRestaurant(
+    getReservationsParams: GetReservationsByRestaurantDto,
+    apiCode: string
+  ): Promise<any> {
+    const reservations = await this.reservationBizService.getActiveReservationsPerRestaurant(
       getReservationsParams,
       apiCode
     );

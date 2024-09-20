@@ -8,6 +8,7 @@ import GetReservationsDto from "src/app/reservation/dto/getReservations.dto";
 import UpdateReservationDto from "src/app/reservation/dto/updateReservation.dto";
 import GetReservationByResIdTableDto from "src/app/reservation/dto/getReservationByResIdTable.dto";
 import GetAvailableSlotsDto from "src/app/reservation/dto/getAvailableSlots.dto";
+import GetReservationsByRestaurantDto from "src/app/reservation/dto/getReservationsByRestaurant.dto";
 const moment = require("moment");
 @Injectable()
 export default class ReservationDB {
@@ -31,23 +32,89 @@ export default class ReservationDB {
   async getReservationsPerUser(
     getReservationParams: GetReservationsDto
   ): Promise<any> {
-    const { userId } = getReservationParams;
+    const { email } = getReservationParams;
     try {
       return await MySQLClient.runQuery(
         dbNamesEnum.DB,
-        `select u.first_name as firstName,
-            u.last_name as lastName,
+        `
+          select r.img_url as image,
             r.name,
-            r.address,
-            t.table_id as tableId,
-            t.comment, 
-            t.chairs as chairs,
-            time,
-            note
-            from reservations rs inner join users u on rs.user_id = u.id
-            left join restaurants r on rs.restaurant_id = r.id
-            left join tables t on rs.table_id = t.table_id
-            where user_id = ${userId}`,
+            rs.start_date_time || ' - ' || rs.end_date_time as time, 
+            p.name as position,
+            numberOfChairs as guestCount
+          from reservations rs inner join users u 
+            on rs.user_id = u.email
+          left join restaurants r 
+            on rs.restaurant_id = r.id
+          left join tables t 
+            on rs.table_id = t.table_id
+          left join positions p
+            on rs.position_id = p.position_id
+          where email = ${email}`,
+        this.mySqlConfig.config[dbNamesEnum.DB]
+      );
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async getActiveReservationsPerUser(
+    getReservationParams: GetReservationsDto
+  ): Promise<any> {
+    const { email } = getReservationParams;
+    try {
+      return await MySQLClient.runQuery(
+        dbNamesEnum.DB,
+        `
+          select r.img_url as image,
+            r.name,
+            rs.start_date_time || ' - ' || rs.end_date_time as time, 
+            p.name as position,
+            numberOfChairs as guestCount
+          from reservations rs inner join users u 
+            on rs.user_id = u.email
+          left join restaurants r 
+            on rs.restaurant_id = r.id
+          left join tables t 
+            on rs.table_id = t.table_id
+          left join positions p
+            on rs.position_id = p.position_id
+          where email = '${email}'
+            and rs.start_date_time > sysdate()`,
+        this.mySqlConfig.config[dbNamesEnum.DB]
+      );
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async getActiveReservationsPerRestaurant(
+    getReservationParams: GetReservationsByRestaurantDto
+  ): Promise<any> {
+    const { restaurantId } = getReservationParams;
+    try {
+      return await MySQLClient.runQuery(
+        dbNamesEnum.DB,
+        `
+          select
+            u.email,
+            u.first_name as firstName,
+            u.last_name as lastName, 
+            r.img_url as image,
+            r.name,
+            rs.start_date_time || ' - ' || rs.end_date_time as time, 
+            p.name as position,
+            numberOfChairs as guestCount
+          from reservations rs inner join users u 
+            on rs.user_id = u.email
+          left join restaurants r 
+            on rs.restaurant_id = r.id
+          left join tables t 
+            on rs.table_id = t.table_id
+          left join positions p
+            on rs.position_id = p.position_id
+          where rs.restaurant_id = '${restaurantId}'
+            and rs.start_date_time > sysdate()`,
         this.mySqlConfig.config[dbNamesEnum.DB]
       );
     } catch (error) {
@@ -58,9 +125,9 @@ export default class ReservationDB {
   async deleteReservation(
     deleteReservationParams: DeleteReservationDto
   ): Promise<any> {
-    const { userId, restaurantId, tableId, time } = deleteReservationParams;
+    const { email, restaurantId, tableId, time } = deleteReservationParams;
     const formatedDatetime = moment(time).format("YYYY-MM-DD HH:mm:ss");
-    const sql = `DELETE FROM reservations WHERE user_id = ${userId} and restaurant_id = ${restaurantId} and table_id = ${tableId} and time = "${formatedDatetime}";`;
+    const sql = `DELETE FROM reservations WHERE user_id = '${email}' and restaurant_id = ${restaurantId} and table_id = ${tableId} and time = "${formatedDatetime}";`;
     try {
       return await MySQLClient.runQuery(
         dbNamesEnum.DB,
@@ -111,7 +178,12 @@ export default class ReservationDB {
   async getAvailableSlots(
     getAvailableSlotsParams: GetAvailableSlotsDto
   ): Promise<any> {
-    const { restaurantId, categoryId, positionId, chairs } = getAvailableSlotsParams;
+    const {
+      restaurantId,
+      categoryId,
+      positionId,
+      chairs,
+    } = getAvailableSlotsParams;
     try {
       const sql1 = `
         select duration, start_time as startTime, end_time as endTime
@@ -127,8 +199,8 @@ export default class ReservationDB {
         this.mySqlConfig.config[dbNamesEnum.DB]
       );
 
-      const {data} = res;
-      const { duration, startTime, endTime} = data[0];
+      const { data } = res;
+      const { duration, startTime, endTime } = data[0];
       const durationParts = duration / 30;
       const sql2 = `
         select count(*) as tablesNum
@@ -144,14 +216,14 @@ export default class ReservationDB {
       );
 
       const data2 = res2.data;
-      const {tablesNum} = data2[0];
+      const { tablesNum } = data2[0];
       let start = new Date();
-      start.setHours(startTime, 0, 0, 0); 
+      start.setHours(startTime, 0, 0, 0);
       const timePoint = (endTime - startTime - 1) * 2;
       const halfHour = 30 * 60 * 1000; // 30 minuta u milisekundama
       let termins = [];
       for (let i = 0; i < timePoint; i++) {
-        let firstTime = new Date(start.getTime() + i * halfHour); 
+        let firstTime = new Date(start.getTime() + i * halfHour);
         let secondTime = new Date(start.getTime() + (i + 1) * halfHour);
         let sql3 = `
           select ${tablesNum} - count(*) as freeTables
@@ -172,13 +244,12 @@ export default class ReservationDB {
         );
 
         let data3 = res3.data;
-        const {freeTables} = data3[0];
+        const { freeTables } = data3[0];
         if (freeTables > 0) {
-          termins.push(true)
+          termins.push(true);
         } else {
           termins.push(false);
         }
-
       }
 
       let endTermins = [];

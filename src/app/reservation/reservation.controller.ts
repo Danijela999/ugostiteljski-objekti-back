@@ -47,6 +47,8 @@ import { JoiValidationPipeApiG } from "src/pipes/apiGee/joiValidation.apiGee.pip
 import getReservationsSchema from "./schema/getReservations.schema";
 import GetAvailableSlotsDto from "./dto/getAvailableSlots.dto";
 import getAvailableSlotsSchema from "./schema/getAvailableSlots.schema";
+import GetReservationsByRestaurantDto from "./dto/getReservationsByRestaurant.dto";
+import getReservationsByRestaurantSchema from "./schema/getReservationsByRestauran.schema";
 
 const apiCode = httpApiGeeCodes["ReservationController"];
 @ApiTags("Reservation")
@@ -104,6 +106,58 @@ export default class ReservationController {
   }
   /** getReservationsPerUser - END */
 
+  /** getActiveReservationsPerUser - START */
+  @Get("/active")
+  @ApiBadRequestResponse(commonBadRequest({ apiCode }))
+  @ApiInternalServerErrorResponse(commonInternalServerError({ apiCode }))
+  @ApiUnauthorizedResponse(commonNotAuthorized({ apiCode }))
+  @ApiForbiddenResponse(commonForbidden({ apiCode }))
+  @ApiNotFoundResponse(commonNotFound({ apiCode, message: "Menu Not Found" }))
+  @ApiOkResponse(
+    commonOK({
+      description: "Successfully retreived reservations data",
+    })
+  )
+  @UseGuards(AuthGuardApiG)
+  @UsePipes(new JoiValidationPipeApiG(getReservationsSchema, apiCode))
+  async getActiveReservationsPerUser(
+    @Query() getReservationsParams: GetReservationsDto,
+    @Res() _res: Response
+  ): Promise<any> {
+    return await this.reservationService.getActiveReservationsPerUser(
+      getReservationsParams,
+      apiCode
+    );
+  }
+  /** getActiveReservationsPerUser - END */
+
+  /** getActiveReservationsPerRestaurants - START */
+  @Get("/restaurants/active")
+  @ApiBadRequestResponse(commonBadRequest({ apiCode }))
+  @ApiInternalServerErrorResponse(commonInternalServerError({ apiCode }))
+  @ApiUnauthorizedResponse(commonNotAuthorized({ apiCode }))
+  @ApiForbiddenResponse(commonForbidden({ apiCode }))
+  @ApiNotFoundResponse(commonNotFound({ apiCode, message: "Menu Not Found" }))
+  @ApiOkResponse(
+    commonOK({
+      description: "Successfully retreived reservations data",
+    })
+  )
+  @UseGuards(AuthGuardApiG)
+  @UsePipes(
+    new JoiValidationPipeApiG(getReservationsByRestaurantSchema, apiCode)
+  )
+  async getActiveReservationsPerRestaurants(
+    @Query() getReservationsParams: GetReservationsByRestaurantDto,
+    @Res() _res: Response
+  ): Promise<any> {
+    return await this.reservationService.getActiveReservationsPerRestaurant(
+      getReservationsParams,
+      apiCode
+    );
+  }
+  /** getActiveReservationsPerRestaurants - END */
+
   /** getAvailableSlots - START */
   @Get("/slots")
   @ApiBadRequestResponse(commonBadRequest({ apiCode }))
@@ -127,7 +181,7 @@ export default class ReservationController {
       apiCode
     );
   }
-  /** getReservationsPerUser - END */
+  /** getAvailableSlots - END */
 
   /** deleteReservation - START */
   @Delete("/")
@@ -151,7 +205,7 @@ export default class ReservationController {
       apiCode
     );
   }
-  /** deleteTable - END */
+  /** deleteRezervation - END */
 
   /** updateReservation - START */
   @Patch("/")
