@@ -18,6 +18,7 @@ import LogoutDto from "./dto/logout.dto";
 import BizExternalUserService from "src/bizServices/appUser/bizExternalUser.service";
 import ForgotPasswordDto from "./dto/forgotPassword.dto";
 import ChangeProfilePhotoDto from "./dto/changeProfilePhoto.dto";
+import ChangeRolesDto from "./dto/changeRoles.dto";
 
 @Injectable()
 export default class UserService {
@@ -174,6 +175,7 @@ export default class UserService {
     );
     return new CommonResponse(null, 204, "Deleted", null, true);
   }
+
   async changeProfilePhoto(
     changePhotoParams: ChangeProfilePhotoDto,
     apiCode: string
@@ -187,6 +189,7 @@ export default class UserService {
     await this.userBizService.changeProfilePhoto(changePhotoParams, apiCode);
     return new CommonResponse(null, 201, "Updated", null, true);
   }
+
   async getUserByEmail(email: string, apiCode: string): Promise<any> {
     const user = await this.userBizService.getUserByEmail(email, apiCode);
     if (user.length == 0) {
@@ -194,5 +197,23 @@ export default class UserService {
         .exception;
     }
     return new CommonResponse(null, 200, "OK", user);
+  }
+
+  async getAllUsers(apiCode: string): Promise<any> {
+    const users = await this.userBizService.getAllUsers(apiCode);
+    if (users.length == 0) {
+      throw new CustomNotFoundExceptionApiG(apiCode, "User not found")
+        .exception;
+    }
+    return new CommonResponse(null, 200, "OK", users);
+  }
+
+  async changeRoles(params: ChangeRolesDto, apiCode: string): Promise<any> {
+    const isChange = await this.userBizService.changeRoles(params, apiCode);
+    if (!isChange) {
+      throw new CustomNotFoundExceptionApiG(apiCode, "User not found")
+        .exception;
+    }
+    return new CommonResponse(null, 204, "Updated", null, true);
   }
 }

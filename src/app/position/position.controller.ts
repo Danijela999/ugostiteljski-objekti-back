@@ -10,15 +10,11 @@ import {
 } from "@nestjs/swagger";
 import {
   Controller,
-  Delete,
   Get,
-  Post,
-  Body,
   Query,
   Res,
   UseGuards,
   UsePipes,
-  Patch,
 } from "@nestjs/common";
 
 import { Response } from "express";

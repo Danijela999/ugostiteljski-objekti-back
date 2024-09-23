@@ -6,7 +6,7 @@ import { dbNamesEnum } from "../constants/dbNames.enum";
 import * as bcrypt from "bcrypt";
 import ChangePasswordDto from "src/app/user/dto/changePassword.dto";
 import ChangeProfilePhotoDto from "src/app/user/dto/changeProfilePhoto.dto";
-import GetUserByEmailDto from "src/app/user/dto/getUserByEmail.dto";
+import ChangeRolesDto from "src/app/user/dto/changeRoles.dto";
 
 @Injectable()
 export default class UserDB {
@@ -56,7 +56,9 @@ export default class UserDB {
       throw error;
     }
   }
-  async changeProfilePhoto(changePhotoParams: ChangeProfilePhotoDto): Promise<any> {
+  async changeProfilePhoto(
+    changePhotoParams: ChangeProfilePhotoDto
+  ): Promise<any> {
     const { photoUrl, email } = changePhotoParams;
     const sql = `UPDATE users set img_url = "${photoUrl}" where email = "${email}";`;
     try {
@@ -65,6 +67,47 @@ export default class UserDB {
         sql,
         this.mySqlConfig.config[dbNamesEnum.DB]
       );
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async getAllUsers(): Promise<any> {
+    const sql = `
+      select email, u.privilege_id as privilegeId
+      from users u
+      join privilege p on u.privilege_id = p.privilege_id
+      where u.privilege_id in (1, 2);
+    `;
+
+    try {
+      return await MySQLClient.runQuery(
+        dbNamesEnum.DB,
+        sql,
+        this.mySqlConfig.config[dbNamesEnum.DB]
+      );
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async changeRoles(params: ChangeRolesDto): Promise<Boolean> {
+    const { users } = params;
+    try {
+      for (const user of users) {
+        const { email, privilegeId } = user;
+        let sql = `
+        UPDATE users 
+        set privilege_id = ${privilegeId}
+        where email = '${email}'`;
+
+        await MySQLClient.runQuery(
+          dbNamesEnum.DB,
+          sql,
+          this.mySqlConfig.config[dbNamesEnum.DB]
+        );
+      }
+      return true;
     } catch (error) {
       throw error;
     }

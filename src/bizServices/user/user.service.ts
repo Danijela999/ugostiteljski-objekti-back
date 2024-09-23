@@ -9,6 +9,7 @@ import MailClient from "src/biz/api/mail/mail.client";
 import MailBodyDto from "src/biz/api/mail/dto/mailBody.dto";
 import ChangeProfilePhotoDto from "src/app/user/dto/changeProfilePhoto.dto";
 import GetUserByEmailDto from "src/app/user/dto/getUserByEmail.dto";
+import ChangeRolesDto from "src/app/user/dto/changeRoles.dto";
 
 @Injectable()
 export default class UserBizService {
@@ -70,6 +71,22 @@ export default class UserBizService {
   ): Promise<any> {
     try {
       return await this.userDb.changeProfilePhoto(changePhotoParams);
+    } catch (err) {
+      throw new CustomInternalServerErrorExceptionApiG(apiCode, err).exception;
+    }
+  }
+
+  async getAllUsers(apiCode: string): Promise<any> {
+    try {
+      return await this.userDb.getAllUsers();
+    } catch (err) {
+      throw new CustomInternalServerErrorExceptionApiG(apiCode, err).exception;
+    }
+  }
+
+  async changeRoles(params: ChangeRolesDto, apiCode: string): Promise<any> {
+    try {
+      return await this.userDb.changeRoles(params);
     } catch (err) {
       throw new CustomInternalServerErrorExceptionApiG(apiCode, err).exception;
     }

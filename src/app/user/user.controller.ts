@@ -2,20 +2,14 @@ import {
   ApiTags,
   ApiBadRequestResponse,
   ApiInternalServerErrorResponse,
-  ApiMethodNotAllowedResponse,
   ApiOkResponse,
   ApiForbiddenResponse,
-  ApiSecurity,
   ApiNotFoundResponse,
-  ApiResponse,
   ApiUnauthorizedResponse,
-  ApiCreatedResponse,
-  ApiNoContentResponse,
 } from "@nestjs/swagger";
 import {
   Controller,
   Post,
-  Put,
   Body,
   Res,
   UsePipes,
@@ -24,6 +18,7 @@ import {
   Delete,
   Param,
   Get,
+  Put,
 } from "@nestjs/common";
 
 import { Response } from "express";
@@ -57,6 +52,8 @@ import changeProfilePhotoSchema from "./schema/changeProfilePhoto.schema";
 import ChangeProfilePhotoDto from "./dto/changeProfilePhoto.dto";
 import getUserByEmailSchema from "./schema/getUserByEmail.schema";
 import GetUserByEmailDto from "./dto/getUserByEmail.dto";
+import changeRolesSchema from "./schema/changeRoles.schema";
+import ChangeRolesDto from "./dto/changeRoles.dto";
 
 const apiCode = httpApiGeeCodes["UserController"];
 @ApiTags("User")
@@ -81,6 +78,43 @@ export default class UserController {
     return await this.userService.createUser(createUserParams, apiCode);
   }
   /** createUser - END */
+
+  /** getAllUsers- START */
+  @Get("/")
+  @ApiInternalServerErrorResponse(commonInternalServerError({ apiCode }))
+  @ApiUnauthorizedResponse(commonNotAuthorized({ apiCode }))
+  @ApiForbiddenResponse(commonForbidden({ apiCode }))
+  @ApiNotFoundResponse(commonNotFound({ apiCode, message: "Users Not Found" }))
+  @ApiOkResponse(
+    commonCreated({
+      description: "Successfully get users",
+    })
+  )
+  async getAllUsers(@Res() _res: Response): Promise<any> {
+    return await this.userService.getAllUsers(apiCode);
+  }
+  /** getAllUsers - END */
+
+  /** changeRoles- START */
+  @Put("/roles")
+  @ApiBadRequestResponse(commonBadRequest({ apiCode }))
+  @ApiInternalServerErrorResponse(commonInternalServerError({ apiCode }))
+  @ApiUnauthorizedResponse(commonNotAuthorized({ apiCode }))
+  @ApiForbiddenResponse(commonForbidden({ apiCode }))
+  @ApiNotFoundResponse(commonNotFound({ apiCode, message: "User Not Found" }))
+  @ApiOkResponse(
+    commonCreated({
+      description: "Successfully change role of users",
+    })
+  )
+  @UsePipes(new JoiValidationPipe(changeRolesSchema))
+  async changeRoles(
+    @Body() parmas: ChangeRolesDto,
+    @Res() _res: Response
+  ): Promise<any> {
+    return await this.userService.changeRoles(parmas, apiCode);
+  }
+  /** changeRoles - END */
 
   /** loginUser- START */
   @Post("/login")
@@ -184,37 +218,38 @@ export default class UserController {
     return await this.userService.logout(logoutParams, apiCode);
   }
   /** logout - END */
-   /** changePhoto- START */
-   @Patch("/change-profile-photo")
-   @ApiBadRequestResponse(commonBadRequest({ apiCode }))
-   @ApiInternalServerErrorResponse(commonInternalServerError({ apiCode }))
-   @ApiUnauthorizedResponse(commonNotAuthorized({ apiCode }))
-   @ApiForbiddenResponse(commonForbidden({ apiCode }))
-   @ApiNotFoundResponse(commonNotFound({ apiCode, message: "User Not Found" }))
-   @ApiOkResponse(
-     commonCreated({
-       description: "Successfully changed profile photo",
-     })
-   )
-   @UseGuards(AuthGuardApiG)
-   @UsePipes(new JoiValidationPipeApiG(changeProfilePhotoSchema, apiCode))
-   async changeProfilePhoto(
-     @Body() changePhotoParams: ChangeProfilePhotoDto,
-     @Res() _res: Response
-   ): Promise<any> {
-     return await this.userService.changeProfilePhoto(changePhotoParams, apiCode);
-   }
-   /** changePhoto - END */
+  /** changePhoto- START */
+  @Patch("/change-profile-photo")
+  @ApiBadRequestResponse(commonBadRequest({ apiCode }))
+  @ApiInternalServerErrorResponse(commonInternalServerError({ apiCode }))
+  @ApiUnauthorizedResponse(commonNotAuthorized({ apiCode }))
+  @ApiForbiddenResponse(commonForbidden({ apiCode }))
+  @ApiNotFoundResponse(commonNotFound({ apiCode, message: "User Not Found" }))
+  @ApiOkResponse(
+    commonCreated({
+      description: "Successfully changed profile photo",
+    })
+  )
+  @UseGuards(AuthGuardApiG)
+  @UsePipes(new JoiValidationPipeApiG(changeProfilePhotoSchema, apiCode))
+  async changeProfilePhoto(
+    @Body() changePhotoParams: ChangeProfilePhotoDto,
+    @Res() _res: Response
+  ): Promise<any> {
+    return await this.userService.changeProfilePhoto(
+      changePhotoParams,
+      apiCode
+    );
+  }
+  /** changePhoto - END */
 
-   /** getUserByEmail- START */
+  /** getUserByEmail- START */
   @Get("/:email")
   @ApiBadRequestResponse(commonBadRequest({ apiCode }))
   @ApiInternalServerErrorResponse(commonInternalServerError({ apiCode }))
   @ApiUnauthorizedResponse(commonNotAuthorized({ apiCode }))
   @ApiForbiddenResponse(commonForbidden({ apiCode }))
-  @ApiNotFoundResponse(
-    commonNotFound({ apiCode, message: "User not found" })
-  )
+  @ApiNotFoundResponse(commonNotFound({ apiCode, message: "User not found" }))
   @ApiOkResponse(
     commonOK({
       description: "Successfully retreived user data",
