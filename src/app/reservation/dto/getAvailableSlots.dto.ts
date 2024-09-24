@@ -9,5 +9,6 @@ export default class GetAvailableSlotsDto {
   readonly restaurantId: number;
   @ApiProperty({ example: 1 })
   readonly chairs: number;
-   
+  @ApiProperty({ example: "26-OCT-2024" })
+  readonly dateReservation: string;
 }

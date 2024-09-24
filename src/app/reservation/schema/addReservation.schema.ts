@@ -2,11 +2,11 @@ import Joi = require("@hapi/joi");
 
 const addReservationSchema = Joi.object()
   .keys({
-    userId: Joi.number().required(),
+    userId: Joi.string().required(),
     restaurantId: Joi.number().required(),
-    tableId: Joi.number().required(),
-    time: Joi.date().required(),
-    note: Joi.string().required(),
+    positionId: Joi.number().required(),
+    categoryId: Joi.number().required(),
+    startDateTime: Joi.date().required(),
   })
   .required();
 

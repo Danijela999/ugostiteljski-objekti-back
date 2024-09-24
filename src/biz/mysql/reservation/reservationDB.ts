@@ -14,11 +14,77 @@ const moment = require("moment");
 export default class ReservationDB {
   constructor(private readonly mySqlConfig: MySQLConfig) {}
 
-  async addReservation(AddReservationParams: AddReservationDto): Promise<any> {
-    const { userId, restaurantId, tableId, time, note } = AddReservationParams;
-    const formatedDatetime = moment(time).format("YYYY-MM-DD HH:mm:ss");
-    const sql = `INSERT INTO reservations (user_id, restaurant_id, table_id, time, note) VALUES (${userId}, ${restaurantId}, ${tableId}, "${formatedDatetime}", "${note}");`;
+  async addReservation(addReservationParams: AddReservationDto): Promise<any> {
+    const {
+      userId,
+      restaurantId,
+      positionId,
+      categoryId,
+      startDateTime,
+    } = addReservationParams;
     try {
+      const sql1 = `
+        select duration
+        from restaurants r
+        left join restaurant_categories rc
+          ON r.id = rc.restaurant_id
+        where r.id = ${restaurantId}
+          and rc.category_id = ${categoryId}
+      `;
+
+      const res = await MySQLClient.runQuery(
+        dbNamesEnum.DB,
+        sql1,
+        this.mySqlConfig.config[dbNamesEnum.DB]
+      );
+
+      const { duration } = res[0];
+      const endDateTime = new Date(
+        startDateTime.getTime() + duration * 60 * 1000
+      );
+
+      const sql2 = `
+        select min(t.table_id) as tableId
+        from tables t
+        t.restaurant_id = ${restaurantId}
+          and t.position_id = ${positionId}
+          and t.table_id not in (
+            select table_id
+            from reservations
+            where position_id = ${positionId}
+              and restaurant_id = ${restaurantId}
+              and (('${startDateTime}' < start_date_time and '${endDateTime}' > start_date_time) 
+              or ('${startDateTime}' >= start_date_time and '${startDateTime}' < end_date_time))
+          )
+      `;
+
+      const res2 = await MySQLClient.runQuery(
+        dbNamesEnum.DB,
+        sql2,
+        this.mySqlConfig.config[dbNamesEnum.DB]
+      );
+
+      const { tableId } = res2[0];
+      const sql = `
+        INSERT INTO reservations (
+          user_id, 
+          restaurant_id, 
+          position_id, 
+          category_id, 
+          start_date_time, 
+          end_date_time,
+          table_id
+        ) VALUES (
+          "${userId}", 
+          ${restaurantId}, 
+          ${positionId}, 
+          ${categoryId}, 
+          ${startDateTime},
+          ${endDateTime},
+          ${tableId}
+        );
+      `;
+
       return await MySQLClient.runQuery(
         dbNamesEnum.DB,
         sql,
@@ -183,6 +249,7 @@ export default class ReservationDB {
       categoryId,
       positionId,
       chairs,
+      dateReservation,
     } = getAvailableSlotsParams;
     try {
       const sql1 = `
@@ -199,42 +266,59 @@ export default class ReservationDB {
         this.mySqlConfig.config[dbNamesEnum.DB]
       );
 
-      const { data } = res;
-      const { duration, startTime, endTime } = data[0];
+      const { duration, startTime, endTime } = res[0];
       const durationParts = duration / 30;
       const sql2 = `
         select count(*) as tablesNum
         from tables
         where restaurant_id = ${restaurantId}
           and position_id = ${positionId}
-          and chairs = ${chairs}
+          and numberOfChairs = ${chairs}
       `;
+
       const res2 = await MySQLClient.runQuery(
         dbNamesEnum.DB,
         sql2,
         this.mySqlConfig.config[dbNamesEnum.DB]
       );
+      const { tablesNum } = res2[0];
 
-      const data2 = res2.data;
-      const { tablesNum } = data2[0];
-      let start = new Date();
-      start.setHours(startTime, 0, 0, 0);
-      const timePoint = (endTime - startTime - 1) * 2;
+      let start = new Date(dateReservation);
+      let startTimeInt = Number(startTime.split(":")[0]);
+      let endTimeInt = Number(endTime.split(":")[0]);
+      if (endTimeInt === 0) {
+        endTimeInt = 24;
+      }
+
+      start.setHours(startTimeInt, 0, 0, 0);
+      let timePoint = (endTimeInt - startTimeInt) * 2;
+      if (endTimeInt <= startTimeInt) {
+        timePoint = (endTimeInt + 24 - startTimeInt) * 2;
+      }
+      console.log(timePoint);
       const halfHour = 30 * 60 * 1000; // 30 minuta u milisekundama
       let termins = [];
       for (let i = 0; i < timePoint; i++) {
-        let firstTime = new Date(start.getTime() + i * halfHour);
-        let secondTime = new Date(start.getTime() + (i + 1) * halfHour);
+        let firstTime = new Date(start.getTime() + i * halfHour)
+          .toISOString()
+          .slice(0, 19)
+          .replace("T", " ");
+
+        let secondTime = new Date(start.getTime() + (i + 1) * halfHour)
+          .toISOString()
+          .slice(0, 19)
+          .replace("T", " ");
+
         let sql3 = `
           select ${tablesNum} - count(*) as freeTables
           from reservations r
           left join tables t
 	          on r.table_id = t.table_id
-          where t.chairs = ${chairs}
+          where t.numberOfChairs = ${chairs}
 	          and r.restaurant_id = ${restaurantId}
             and r.position_id = ${positionId}
-            and ((${firstTime} < start_date_time and ${secondTime} > start_date_time) 
-              or (${firstTime} >= start_date_time and ${firstTime} < end_date_time))
+            and (('${firstTime}' < start_date_time and '${secondTime}' > start_date_time) 
+              or ('${firstTime}' >= start_date_time and '${firstTime}' < end_date_time))
         `;
         //Broj postojecih rezervacija za termin od first od second time
         let res3 = await MySQLClient.runQuery(
@@ -243,8 +327,7 @@ export default class ReservationDB {
           this.mySqlConfig.config[dbNamesEnum.DB]
         );
 
-        let data3 = res3.data;
-        const { freeTables } = data3[0];
+        const { freeTables } = res3[0];
         if (freeTables > 0) {
           termins.push(true);
         } else {

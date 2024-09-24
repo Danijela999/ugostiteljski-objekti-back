@@ -6,6 +6,7 @@ const getAvailableSlotsSchema = Joi.object()
     categoryId: Joi.number().required(),
     restaurantId: Joi.number().required(),
     chairs: Joi.number().required(),
+    dateReservation: Joi.string().required(),
   })
   .required();
 
