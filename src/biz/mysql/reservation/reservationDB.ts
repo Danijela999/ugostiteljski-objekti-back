@@ -81,17 +81,15 @@ export default class ReservationDB {
           user_id, 
           restaurant_id, 
           position_id, 
-          category_id, 
           start_date_time, 
           end_date_time,
           table_id
         ) VALUES (
-          "${userId}", 
+          '${userId}', 
           ${restaurantId}, 
           ${positionId}, 
-          ${categoryId}, 
-          '${startTime}',
-          '${endTime}',
+          '${firstTime}',
+          '${secondTime}',
           ${tableId}
         );
       `;

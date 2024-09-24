@@ -20,11 +20,11 @@ export default class ReservationService {
     addReservationParams: AddReservationDto,
     apiCode: string
   ): Promise<any> {
-    const { data } = await this.reservationBizService.addReservation(
+    await this.reservationBizService.addReservation(
       addReservationParams,
       apiCode
     );
-    return new CommonResponse(null, 201, "Created", data, true);
+    return new CommonResponse(null, 201, "Created", null, true);
   }
 
   async getReservationsPerUser(
