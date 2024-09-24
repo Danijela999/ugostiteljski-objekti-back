@@ -7,6 +7,7 @@ import * as bcrypt from "bcrypt";
 import ChangePasswordDto from "src/app/user/dto/changePassword.dto";
 import ChangeProfilePhotoDto from "src/app/user/dto/changeProfilePhoto.dto";
 import ChangeRolesDto from "src/app/user/dto/changeRoles.dto";
+import GetUserRoleByEmailDto from "src/app/user/dto/getUserRoleByEmail.dto";
 
 @Injectable()
 export default class UserDB {
@@ -78,6 +79,27 @@ export default class UserDB {
       from users u
       join privilege p on u.privilege_id = p.privilege_id
       where u.privilege_id in (1, 2);
+    `;
+
+    try {
+      return await MySQLClient.runQuery(
+        dbNamesEnum.DB,
+        sql,
+        this.mySqlConfig.config[dbNamesEnum.DB]
+      );
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async getUsersRoleByEmail(params: GetUserRoleByEmailDto): Promise<any> {
+    const { email } = params;
+    const sql = `
+      select email, u.privilege_id as privilegeId
+      from users u
+      join privilege p on u.privilege_id = p.privilege_id
+      where u.privilege_id in (1, 2)
+        and email like '%${email}%';
     `;
 
     try {

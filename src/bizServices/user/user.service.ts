@@ -10,6 +10,7 @@ import MailBodyDto from "src/biz/api/mail/dto/mailBody.dto";
 import ChangeProfilePhotoDto from "src/app/user/dto/changeProfilePhoto.dto";
 import GetUserByEmailDto from "src/app/user/dto/getUserByEmail.dto";
 import ChangeRolesDto from "src/app/user/dto/changeRoles.dto";
+import GetUserRoleByEmailDto from "src/app/user/dto/getUserRoleByEmail.dto";
 
 @Injectable()
 export default class UserBizService {
@@ -79,6 +80,17 @@ export default class UserBizService {
   async getAllUsers(apiCode: string): Promise<any> {
     try {
       return await this.userDb.getAllUsers();
+    } catch (err) {
+      throw new CustomInternalServerErrorExceptionApiG(apiCode, err).exception;
+    }
+  }
+
+  async getUsersRoleByEmail(
+    params: GetUserRoleByEmailDto,
+    apiCode: string
+  ): Promise<any> {
+    try {
+      return await this.userDb.getUsersRoleByEmail(params);
     } catch (err) {
       throw new CustomInternalServerErrorExceptionApiG(apiCode, err).exception;
     }

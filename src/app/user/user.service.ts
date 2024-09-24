@@ -19,6 +19,7 @@ import BizExternalUserService from "src/bizServices/appUser/bizExternalUser.serv
 import ForgotPasswordDto from "./dto/forgotPassword.dto";
 import ChangeProfilePhotoDto from "./dto/changeProfilePhoto.dto";
 import ChangeRolesDto from "./dto/changeRoles.dto";
+import GetUserRoleByEmailDto from "./dto/getUserRoleByEmail.dto";
 
 @Injectable()
 export default class UserService {
@@ -201,6 +202,21 @@ export default class UserService {
 
   async getAllUsers(apiCode: string): Promise<any> {
     const users = await this.userBizService.getAllUsers(apiCode);
+    if (users.length == 0) {
+      throw new CustomNotFoundExceptionApiG(apiCode, "User not found")
+        .exception;
+    }
+    return new CommonResponse(null, 200, "OK", users);
+  }
+
+  async getUsersRoleByEmail(
+    params: GetUserRoleByEmailDto,
+    apiCode: string
+  ): Promise<any> {
+    const users = await this.userBizService.getUsersRoleByEmail(
+      params,
+      apiCode
+    );
     if (users.length == 0) {
       throw new CustomNotFoundExceptionApiG(apiCode, "User not found")
         .exception;

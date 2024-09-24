@@ -19,6 +19,7 @@ import {
   Param,
   Get,
   Put,
+  Query,
 } from "@nestjs/common";
 
 import { Response } from "express";
@@ -54,6 +55,8 @@ import getUserByEmailSchema from "./schema/getUserByEmail.schema";
 import GetUserByEmailDto from "./dto/getUserByEmail.dto";
 import changeRolesSchema from "./schema/changeRoles.schema";
 import ChangeRolesDto from "./dto/changeRoles.dto";
+import GetUserRoleByEmailDto from "./dto/getUserRoleByEmail.dto";
+import getUserRoleByEmailSchema from "./schema/getUserRoleByEmail.schema";
 
 const apiCode = httpApiGeeCodes["UserController"];
 @ApiTags("User")
@@ -94,6 +97,26 @@ export default class UserController {
     return await this.userService.getAllUsers(apiCode);
   }
   /** getAllUsers - END */
+
+  /** getUsersRoleByEmail- START */
+  @Get("/roles")
+  @ApiInternalServerErrorResponse(commonInternalServerError({ apiCode }))
+  @ApiUnauthorizedResponse(commonNotAuthorized({ apiCode }))
+  @ApiForbiddenResponse(commonForbidden({ apiCode }))
+  @ApiNotFoundResponse(commonNotFound({ apiCode, message: "Users Not Found" }))
+  @ApiOkResponse(
+    commonCreated({
+      description: "Successfully get users",
+    })
+  )
+  @UsePipes(new JoiValidationPipe(getUserRoleByEmailSchema))
+  async getUsersRoleByEmail(
+    @Query() params: GetUserRoleByEmailDto,
+    @Res() _res: Response
+  ): Promise<any> {
+    return await this.userService.getUsersRoleByEmail(params, apiCode);
+  }
+  /** getUsersRoleByEmail - END */
 
   /** changeRoles- START */
   @Put("/roles")
