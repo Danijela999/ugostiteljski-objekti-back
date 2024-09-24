@@ -10,5 +10,5 @@ export default class AddReservationDto {
   @ApiProperty({ example: 1 })
   readonly categoryId: number;
   @ApiProperty({ example: "2024-03-17T15:00:00Z" })
-  readonly startDateTime: Date;
+  readonly startDateTime: string;
 }

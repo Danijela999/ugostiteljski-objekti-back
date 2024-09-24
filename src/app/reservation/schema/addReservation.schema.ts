@@ -6,7 +6,7 @@ const addReservationSchema = Joi.object()
     restaurantId: Joi.number().required(),
     positionId: Joi.number().required(),
     categoryId: Joi.number().required(),
-    startDateTime: Joi.date().required(),
+    startDateTime: Joi.string().required(),
   })
   .required();
 

@@ -39,22 +39,32 @@ export default class ReservationDB {
       );
 
       const { duration } = res[0];
-      const endDateTime = new Date(
-        startDateTime.getTime() + duration * 60 * 1000
-      );
+      console.log(startDateTime);
+      // const localDate = new Date(`${startDateTime} UTC`);
+      const startTime = new Date(`${startDateTime} UTC`);
+      console.log(startTime);
+      const endTime = new Date(startTime.getTime() + duration * 60 * 1000);
 
+      const firstTime = startTime
+        .toISOString()
+        .slice(0, 19)
+        .replace("T", " ");
+      const secondTime = endTime
+        .toISOString()
+        .slice(0, 19)
+        .replace("T", " ");
       const sql2 = `
         select min(t.table_id) as tableId
         from tables t
-        t.restaurant_id = ${restaurantId}
+        where t.restaurant_id = ${restaurantId}
           and t.position_id = ${positionId}
           and t.table_id not in (
             select table_id
             from reservations
             where position_id = ${positionId}
               and restaurant_id = ${restaurantId}
-              and (('${startDateTime}' < start_date_time and '${endDateTime}' > start_date_time) 
-              or ('${startDateTime}' >= start_date_time and '${startDateTime}' < end_date_time))
+              and (('${firstTime}' < start_date_time and '${secondTime}' > start_date_time) 
+              or ('${firstTime}' >= start_date_time and '${firstTime}' < end_date_time))
           )
       `;
 
@@ -65,6 +75,7 @@ export default class ReservationDB {
       );
 
       const { tableId } = res2[0];
+      console.log(tableId);
       const sql = `
         INSERT INTO reservations (
           user_id, 
@@ -79,8 +90,8 @@ export default class ReservationDB {
           ${restaurantId}, 
           ${positionId}, 
           ${categoryId}, 
-          ${startDateTime},
-          ${endDateTime},
+          '${startTime}',
+          '${endTime}',
           ${tableId}
         );
       `;
@@ -91,6 +102,7 @@ export default class ReservationDB {
         this.mySqlConfig.config[dbNamesEnum.DB]
       );
     } catch (error) {
+      console.log(error);
       throw error;
     }
   }
