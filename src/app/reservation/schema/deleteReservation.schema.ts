@@ -2,10 +2,10 @@ import Joi = require("@hapi/joi");
 
 const deleteReservationSchema = Joi.object()
   .keys({
-    userId: Joi.number().required(),
+    email: Joi.string().required(),
     restaurantId: Joi.number().required(),
     tableId: Joi.number().required(),
-    time: Joi.date().required(),
+    startDateTime: Joi.string().required(),
   })
   .required();
 

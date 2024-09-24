@@ -7,6 +7,6 @@ export default class DeleteReservationDto {
   readonly restaurantId: number;
   @ApiProperty({ example: 1 })
   readonly tableId: number;
-  @ApiProperty({ example: 1 })
-  readonly time: Date;
+  @ApiProperty({ example: "2024-09-26 09:30:00" })
+  readonly startDateTime: string;
 }

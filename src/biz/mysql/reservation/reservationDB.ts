@@ -115,7 +115,9 @@ export default class ReservationDB {
         `
           select r.img_url as image,
             r.name,
-            rs.start_date_time || ' - ' || rs.end_date_time as time, 
+            DATE_FORMAT(rs.start_date_time, '%H:%i') startTime,
+            DATE_FORMAT(rs.end_date_time, '%H:%i') as endTime,
+            DATE_FORMAT(rs.start_date_time, '%d.%m.%Y') as dateOnly,
             p.name as position,
             numberOfChairs as guestCount
           from reservations rs inner join users u 
@@ -126,7 +128,7 @@ export default class ReservationDB {
             on rs.table_id = t.table_id
           left join positions p
             on rs.position_id = p.position_id
-          where email = ${email}`,
+          where email = '${email}'`,
         this.mySqlConfig.config[dbNamesEnum.DB]
       );
     } catch (error) {
@@ -144,9 +146,16 @@ export default class ReservationDB {
         `
           select r.img_url as image,
             r.name,
-            rs.start_date_time || ' - ' || rs.end_date_time as time, 
+            DATE_FORMAT(rs.start_date_time, '%H:%i') startTime,
+            DATE_FORMAT(rs.end_date_time, '%H:%i') as endTime,
+            DATE_FORMAT(rs.start_date_time, '%d.%m.%Y') as dateOnly,
+            DATE_FORMAT(rs.start_date_time, '%Y-%m-%d %H:%i:%s') as startDateTime,
             p.name as position,
-            numberOfChairs as guestCount
+            numberOfChairs as guestCount,
+            t.table_id as tableId,
+            rs.restaurant_id as restaurantId,
+            u.email,
+            p.position_id as positionId
           from reservations rs inner join users u 
             on rs.user_id = u.email
           left join restaurants r 
@@ -167,30 +176,35 @@ export default class ReservationDB {
   async getActiveReservationsPerRestaurant(
     getReservationParams: GetReservationsByRestaurantDto
   ): Promise<any> {
-    const { restaurantId } = getReservationParams;
+    const { email } = getReservationParams;
     try {
+      const sql = `
+        select
+          u.email,
+          u.first_name as firstName,
+          u.last_name as lastName, 
+          r.img_url as image,
+          r.name,
+          DATE_FORMAT(rs.start_date_time, '%H:%i') startTime,
+          DATE_FORMAT(rs.end_date_time, '%H:%i') as endTime,
+          DATE_FORMAT(rs.start_date_time, '%d.%m.%Y') as dateOnly,
+          p.name as position,
+          numberOfChairs as guestCount
+        from reservations rs inner join users u 
+          on rs.user_id = u.email
+        left join restaurants r 
+          on rs.restaurant_id = r.id
+        left join tables t 
+          on rs.table_id = t.table_id
+        left join positions p
+          on rs.position_id = p.position_id
+        where r.user_id = '${email}'
+          and rs.start_date_time > sysdate()
+      `;
+
       return await MySQLClient.runQuery(
         dbNamesEnum.DB,
-        `
-          select
-            u.email,
-            u.first_name as firstName,
-            u.last_name as lastName, 
-            r.img_url as image,
-            r.name,
-            rs.start_date_time || ' - ' || rs.end_date_time as time, 
-            p.name as position,
-            numberOfChairs as guestCount
-          from reservations rs inner join users u 
-            on rs.user_id = u.email
-          left join restaurants r 
-            on rs.restaurant_id = r.id
-          left join tables t 
-            on rs.table_id = t.table_id
-          left join positions p
-            on rs.position_id = p.position_id
-          where rs.restaurant_id = '${restaurantId}'
-            and rs.start_date_time > sysdate()`,
+        sql,
         this.mySqlConfig.config[dbNamesEnum.DB]
       );
     } catch (error) {
@@ -201,9 +215,21 @@ export default class ReservationDB {
   async deleteReservation(
     deleteReservationParams: DeleteReservationDto
   ): Promise<any> {
-    const { email, restaurantId, tableId, time } = deleteReservationParams;
-    const formatedDatetime = moment(time).format("YYYY-MM-DD HH:mm:ss");
-    const sql = `DELETE FROM reservations WHERE user_id = '${email}' and restaurant_id = ${restaurantId} and table_id = ${tableId} and time = "${formatedDatetime}";`;
+    const {
+      email,
+      restaurantId,
+      tableId,
+      startDateTime,
+    } = deleteReservationParams;
+    const startTime = new Date(`${startDateTime} UTC`);
+    console.log(startTime);
+
+    const formatedDatetime = startTime
+      .toISOString()
+      .slice(0, 19)
+      .replace("T", " ");
+
+    const sql = `DELETE FROM reservations WHERE user_id = '${email}' and restaurant_id = ${restaurantId} and table_id = ${tableId} and start_date_time = '${formatedDatetime}';`;
     try {
       return await MySQLClient.runQuery(
         dbNamesEnum.DB,
