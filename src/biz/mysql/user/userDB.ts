@@ -78,7 +78,7 @@ export default class UserDB {
       select email, u.privilege_id as privilegeId
       from users u
       join privilege p on u.privilege_id = p.privilege_id
-      where u.privilege_id in (1, 2);
+      where u.privilege_id in (1, 2) order by email;
     `;
 
     try {

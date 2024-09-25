@@ -97,7 +97,7 @@ export default class RestaurantDB {
             start_time as startTime, 
             end_time as endTime,
             latitude, longitude,
-            img_url as imageUrl from restaurants`,
+            img_url as imageUrl from restaurants order by id desc`,
         this.mySqlConfig.config[dbNamesEnum.DB]
       );
     } catch (error) {
@@ -125,7 +125,7 @@ export default class RestaurantDB {
              img_url as imageUrl
           FROM restaurants
           ORDER BY distance
-          LIMIT 4;`,
+          ;`,
         this.mySqlConfig.config[dbNamesEnum.DB]
       );
     } catch (error) {
